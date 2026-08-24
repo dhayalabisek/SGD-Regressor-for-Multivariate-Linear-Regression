@@ -38,29 +38,63 @@ df = pd.DataFrame(data)
 # Input
 X = df[["Area"]]
 
-# Predict Price
-price_model = SGDRegressor(max_iter=10000, tol=1e-3, random_state=42)
-price_model.fit(X, df["Price"])
+# Scale X
+x_scaler = StandardScaler()
+X_scaled = x_scaler.fit_transform(X)
 
-# Predict Occupants
-occupant_model = SGDRegressor(max_iter=10000, tol=1e-3, random_state=42)
-occupant_model.fit(X, df["Occupants"])
+# ---------- PRICE MODEL ----------
+price_scaler = StandardScaler()
+Y_price = price_scaler.fit_transform(df[["Price"]]).ravel()
 
-# Input area of new house
+price_model = SGDRegressor(
+    max_iter=10000,
+    learning_rate="constant",
+    eta0=0.01,
+    random_state=42
+)
+
+price_model.fit(X_scaled, Y_price)
+
+# ---------- OCCUPANTS MODEL ----------
+occupant_scaler = StandardScaler()
+Y_occupants = occupant_scaler.fit_transform(
+    df[["Occupants"]]
+).ravel()
+
+occupant_model = SGDRegressor(
+    max_iter=10000,
+    learning_rate="constant",
+    eta0=0.01,
+    random_state=42
+)
+
+occupant_model.fit(X_scaled, Y_occupants)
+
+# New house area
 new_area = pd.DataFrame({"Area": [1200]})
+new_area_scaled = x_scaler.transform(new_area)
 
-# Predictions
-predicted_price = price_model.predict(new_area)
-predicted_occupants = occupant_model.predict(new_area)
+# Predict price
+price_scaled = price_model.predict(new_area_scaled)
+predicted_price = price_scaler.inverse_transform(
+    price_scaled.reshape(-1, 1)
+)[0][0]
 
-print("Predicted House Price:", predicted_price[0])
-print("Predicted Number of Occupants:", round(predicted_occupants[0]))
+# Predict occupants
+occupants_scaled = occupant_model.predict(new_area_scaled)
+predicted_occupants = occupant_scaler.inverse_transform(
+    occupants_scaled.reshape(-1, 1)
+)[0][0]
+
+# Display results
+print("Predicted House Price:", round(predicted_price, 2))
+print("Number of Occupants:", max(1, round(predicted_occupants)))
 ```
 
 ## Output:
 ```
-Predicted House Price: 2159832426685048.2
-Predicted Number of Occupants: -1045166153011204
+Predicted House Price: 240029.82
+Number of Occupants: 4
 ```
 
 
