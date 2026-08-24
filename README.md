@@ -26,44 +26,41 @@ import pandas as pd
 from sklearn.linear_model import SGDRegressor
 from sklearn.preprocessing import StandardScaler
 
-# Create dataset
+# Dataset
 data = {
-    "Occupants": [2, 3, 4, 5, 6, 7, 8, 9],
-    "Price": [120000, 150000, 180000, 220000, 250000, 280000, 320000, 350000]
+    "Area": [500, 700, 900, 1100, 1300, 1500, 1700, 1900],
+    "Price": [100000, 140000, 180000, 220000, 260000, 300000, 340000, 380000],
+    "Occupants": [2, 3, 3, 4, 5, 5, 6, 7]
 }
 
 df = pd.DataFrame(data)
 
-# Input and output
-X = df[["Occupants"]]
-Y = df["Price"]
+# Input
+X = df[["Area"]]
 
-# Scale input
-scaler = StandardScaler()
-X_scaled = scaler.fit_transform(X)
+# Predict Price
+price_model = SGDRegressor(max_iter=10000, tol=1e-3, random_state=42)
+price_model.fit(X, df["Price"])
 
-# Create SGD model
-model = SGDRegressor(
-    max_iter=10000,
-    learning_rate="constant",
-    eta0=0.01,
-    tol=1e-3,
-    random_state=42
-)
+# Predict Occupants
+occupant_model = SGDRegressor(max_iter=10000, tol=1e-3, random_state=42)
+occupant_model.fit(X, df["Occupants"])
 
-# Train
-model.fit(X_scaled, Y)
+# Input area of new house
+new_area = pd.DataFrame({"Area": [1200]})
 
-# Predict for 5 occupants
-new_data = scaler.transform(pd.DataFrame({"Occupants": [5]}))
-prediction = model.predict(new_data)
+# Predictions
+predicted_price = price_model.predict(new_area)
+predicted_occupants = occupant_model.predict(new_area)
 
-print("Predicted House Price:", prediction[0])
+print("Predicted House Price:", predicted_price[0])
+print("Predicted Number of Occupants:", round(predicted_occupants[0]))
 ```
 
 ## Output:
 ```
-Predicted House Price: 217144.56127701697
+Predicted House Price: 2159832426685048.2
+Predicted Number of Occupants: -1045166153011204
 ```
 
 
